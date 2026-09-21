@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | SocialPulse Automation System{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="main-sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span class="brand-text">SocialPulse</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('navigate_view', view_name='dashboard') }}" 
+               id="nav-dashboard" 
+               class="nav-item {% if active_tab == 'dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('navigate_view', view_name='posts') }}" 
+               id="nav-posts" 
+               class="nav-item {% if active_tab == 'posts' %}active{% endif %}">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Post Manager</span>
+            </a>
+            <a href="{{ url_for('navigate_view', view_name='analytics') }}" 
+               id="nav-analytics" 
+               class="nav-item {% if active_tab == 'analytics' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="{{ url_for('navigate_view', view_name='settings') }}" 
+               id="nav-settings" 
+               class="nav-item {% if active_tab == 'settings' %}active{% endif %}">
+                <i class="fa-solid fa-gear"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile-badge" id="user-profile-badge">
+                <div class="user-avatar">{{ user.username[0].upper() }}</div>
+                <div class="user-details">
+                    <span class="user-name" id="logged-in-user-name">{{ user.full_name }}</span>
+                    <span class="user-role" id="logged-in-user-role">@{{ user.username }} ({{ user.role }})</span>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" id="logout-btn" class="btn btn-outline-danger btn-logout" title="Sign Out">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Top Navbar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 id="page-title" class="page-title">
+                    {% if active_tab == 'dashboard' %}Overview & Real-time Metrics
+                    {% elif active_tab == 'posts' %}Post Management & Content Feed
+                    {% elif active_tab == 'analytics' %}Performance Analytics & Growth
+                    {% elif active_tab == 'settings' %}Workspace Configuration
+                    {% endif %}
+                </h1>
+                <p class="page-subtitle">Track, schedule, and verify cross-platform social outreach</p>
+            </div>
+            <div class="topbar-right">
+                <div class="quick-status-chip">
+                    <span class="status-dot"></span>
+                    <span>Database: Connected (SQLite)</span>
+                </div>
+                <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Metric Cards Row (shown in dashboard and analytics) -->
+        {% if active_tab in ['dashboard', 'analytics'] %}
+        <section class="metrics-grid" id="metrics-section">
+            <div class="metric-card" id="card-followers">
+                <div class="metric-icon metric-icon-purple">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Total Followers</span>
+                    <h3 class="metric-value" id="metric-followers">{{ "{:,}".format(metrics.total_followers) }}</h3>
+                    <span class="metric-trend positive"><i class="fa-solid fa-arrow-trend-up"></i> +12.4% vs last month</span>
+                </div>
+            </div>
+
+            <div class="metric-card" id="card-impressions">
+                <div class="metric-icon metric-icon-blue">
+                    <i class="fa-solid fa-eye"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Total Impressions</span>
+                    <h3 class="metric-value" id="metric-impressions">{{ "{:,}".format(metrics.total_impressions) }}</h3>
+                    <span class="metric-trend positive"><i class="fa-solid fa-arrow-trend-up"></i> +8.1% this week</span>
+                </div>
+            </div>
+
+            <div class="metric-card" id="card-engagement">
+                <div class="metric-icon metric-icon-teal">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Avg Engagement</span>
+                    <h3 class="metric-value" id="metric-engagement">{{ metrics.engagement_rate }}%</h3>
+                    <span class="metric-trend positive"><i class="fa-solid fa-arrow-trend-up"></i> High engagement</span>
+                </div>
+            </div>
+
+            <div class="metric-card" id="card-posts">
+                <div class="metric-icon metric-icon-orange">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Published Posts</span>
+                    <h3 class="metric-value" id="metric-posts">{{ metrics.total_posts }}</h3>
+                    <span class="metric-trend neutral"><i class="fa-solid fa-clock"></i> Active sync</span>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Tab Views -->
+        {% if active_tab in ['dashboard', 'posts'] %}
+        <div class="content-grid">
+            <!-- Left Column: Post Creator -->
+            <div class="card create-post-card" id="create-post-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-feather-pointed"></i> Create New Post</h2>
+                    <span class="badge badge-accent">Live Broadcast</span>
+                </div>
+                <div class="card-body">
+                    <div id="post-validation-error" class="alert alert-error hidden"></div>
+                    <form id="create-post-form">
+                        <div class="form-group">
+                            <label for="post-platform">Target Social Network</label>
+                            <select id="post-platform" class="form-control select-control" name="platform">
+                                <option value="Twitter/X">Twitter / X</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="YouTube">YouTube Community</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="label-with-counter">
+                                <label for="post-content">Post Content</label>
+                                <span id="char-counter" class="char-counter">0 / 280</span>
+                            </div>
+                            <textarea 
+                                id="post-content" 
+                                name="content" 
+                                class="form-control textarea-control" 
+                                rows="4" 
+                                placeholder="What's happening? Share insights, release updates, or announcements..." 
+                                maxlength="280"
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="post-media-url">Optional Media / Image URL</label>
+                            <input 
+                                type="url" 
+                                id="post-media-url" 
+                                name="media_url" 
+                                class="form-control" 
+                                placeholder="https://example.com/banner.png"
+                            >
+                        </div>
+
+                        <button type="submit" id="submit-post-btn" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Publish to Feed</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Posts Feed & Filters -->
+            <div class="card posts-feed-card">
+                <div class="card-header space-between">
+                    <div>
+                        <h2><i class="fa-solid fa-rss"></i> Social Media Feed</h2>
+                        <span class="card-subtext">Live multi-channel stream</span>
+                    </div>
+                    <div class="filter-controls">
+                        <label for="platform-filter" class="filter-label">Filter:</label>
+                        <select id="platform-filter" class="select-filter">
+                            <option value="All">All Platforms</option>
+                            <option value="Twitter/X">Twitter / X</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="YouTube">YouTube</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div id="posts-list" class="posts-list">
+                        {% if posts %}
+                            {% for post in posts %}
+                            <article class="post-card" id="post-{{ post.id }}" data-post-id="{{ post.id }}" data-platform="{{ post.platform }}">
+                                <div class="post-card-header">
+                                    <div class="post-meta">
+                                        <span class="platform-tag platform-{{ post.platform | lower | replace('/', '-') }}">
+                                            {% if 'twitter' in post.platform | lower %}<i class="fa-brands fa-x-twitter"></i>
+                                            {% elif 'linkedin' in post.platform | lower %}<i class="fa-brands fa-linkedin"></i>
+                                            {% elif 'instagram' in post.platform | lower %}<i class="fa-brands fa-instagram"></i>
+                                            {% elif 'youtube' in post.platform | lower %}<i class="fa-brands fa-youtube"></i>
+                                            {% endif %}
+                                            {{ post.platform }}
+                                        </span>
+                                        <span class="post-author">{{ post.full_name }}</span>
+                                        <span class="post-time">{{ post.created_at }}</span>
+                                    </div>
+                                    <button class="delete-post-btn" id="delete-btn-{{ post.id }}" data-id="{{ post.id }}" title="Delete Post">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+
+                                <div class="post-card-body">
+                                    <p class="post-content-text">{{ post.content }}</p>
+                                    {% if post.media_url %}
+                                    <div class="post-media-wrapper">
+                                        <img src="{{ post.media_url }}" alt="Post Media Attachment" class="post-media-img" loading="lazy">
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="post-card-footer">
+                                    <button class="like-post-btn" id="like-btn-{{ post.id }}" data-id="{{ post.id }}">
+                                        <i class="fa-regular fa-heart"></i>
+                                        <span class="like-count" id="like-count-{{ post.id }}">{{ post.likes_count }}</span>
+                                    </button>
+                                    <span class="comments-count">
+                                        <i class="fa-regular fa-comment"></i> {{ post.comments_count }}
+                                    </span>
+                                </div>
+                            </article>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-feed" id="empty-feed-placeholder">
+                                <i class="fa-solid fa-comments"></i>
+                                <p>No posts published yet. Create your first post above!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Analytics Tab -->
+        {% if active_tab == 'analytics' %}
+        <div class="analytics-container" id="analytics-view">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-chart-column"></i> Audience Channel Distribution</h2>
+                </div>
+                <div class="card-body">
+                    <div class="channel-distribution-grid">
+                        <div class="channel-stat-box twitter">
+                            <i class="fa-brands fa-x-twitter"></i>
+                            <span class="channel-name">Twitter / X</span>
+                            <span class="channel-metric">42% of Reach</span>
+                        </div>
+                        <div class="channel-stat-box linkedin">
+                            <i class="fa-brands fa-linkedin"></i>
+                            <span class="channel-name">LinkedIn</span>
+                            <span class="channel-metric">28% of Reach</span>
+                        </div>
+                        <div class="channel-stat-box instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                            <span class="channel-name">Instagram</span>
+                            <span class="channel-metric">20% of Reach</span>
+                        </div>
+                        <div class="channel-stat-box youtube">
+                            <i class="fa-brands fa-youtube"></i>
+                            <span class="channel-name">YouTube</span>
+                            <span class="channel-metric">10% of Reach</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Settings Tab -->
+        {% if active_tab == 'settings' %}
+        <div class="settings-container" id="settings-view">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-sliders"></i> Account & Automation Settings</h2>
+                </div>
+                <div class="card-body">
+                    <div class="settings-group">
+                        <label>Active User Profile</label>
+                        <div class="setting-detail-row">
+                            <span class="detail-label">Username:</span>
+                            <strong id="profile-username">{{ user.username }}</strong>
+                        </div>
+                        <div class="setting-detail-row">
+                            <span class="detail-label">Full Name:</span>
+                            <strong id="profile-fullname">{{ user.full_name }}</strong>
+                        </div>
+                        <div class="setting-detail-row">
+                            <span class="detail-label">User Role:</span>
+                            <span class="badge badge-accent" id="profile-role">{{ user.role }}</span>
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="settings-group">
+                        <label>Test Automation Environment</label>
+                        <p class="setting-desc">Configuration details verified during automated regression runs.</p>
+                        <div class="setting-detail-row">
+                            <span class="detail-label">Test Automation Runner:</span>
+                            <code>Pytest 9.x + Playwright</code>
+                        </div>
+                        <div class="setting-detail-row">
+                            <span class="detail-label">Database Engine:</span>
+                            <code id="db-engine-info">SQLite 3 (File-based schema)</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

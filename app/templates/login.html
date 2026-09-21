@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Login | SocialPulse Automation Dashboard{% endblock %}
+
+{% block body %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="brand-badge">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h1 class="brand-title">SocialPulse</h1>
+            <p class="brand-subtitle">Automation Testbed & Analytics Dashboard</p>
+        </div>
+
+        {% if error %}
+        <div id="error-banner" class="alert alert-error" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="error-message">{{ error }}</span>
+        </div>
+        {% else %}
+        <div id="error-banner" class="alert alert-error hidden" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="error-message"></span>
+        </div>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else 'info' }}">
+                        <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-info' }}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form id="login-form" method="POST" action="{{ url_for('login') }}" class="auth-form" novalidate>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-control" 
+                        placeholder="Enter username (e.g. testuser)"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Enter password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="remember-checkbox">
+                    <input type="checkbox" id="remember-me">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-link" id="forgot-password">Forgot password?</a>
+            </div>
+
+            <button type="submit" id="login-btn" class="btn btn-primary btn-block">
+                <span>Sign In to Dashboard</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="test-credentials-box">
+            <div class="credentials-title">
+                <i class="fa-solid fa-key"></i> Quick Test Credentials (Pre-seeded in DB)
+            </div>
+            <div class="credential-item">
+                <span class="cred-role">Standard User:</span>
+                <code>testuser</code> / <code>Password@123</code>
+            </div>
+            <div class="credential-item">
+                <span class="cred-role">Admin User:</span>
+                <code>admin</code> / <code>Admin@123</code>
+            </div>
+            <div class="credential-item">
+                <span class="cred-role">QA Tester:</span>
+                <code>qa_tester</code> / <code>QASecret#2026</code>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
